@@ -12,7 +12,93 @@ This blog provides a step-by-step guide to building an automated real-time dubbi
 
 ### Prerequisites
 
-This project demo run on the Node.js, GridDB database and you should have an access to the gpt-4o-realtime and gpt-4o-audio models. Optionally, you shuld give a permission for the demo app to use the microphone.
+You should have an access to the gpt-4o-realtime and gpt-4o-audio models. Optionally, you shuold give a permission for the app to use the microphone in the browser.
+
+### How to Run the App
+
+This app is tested on ARM Machines such as Apple MacBook M1 or M2 and to run the project you need [Docker](https://www.docker.com/products/docker-desktop/) installed.
+
+#### 1.`.env` Setup
+
+Create an empty directory, for example, `speech-dubbing`, and change to that directory:
+
+```shell
+mkdir speech-dubbing
+cd speech-dubbing
+```
+
+Create a `.env` file with these keys:
+
+```ini
+OPENAI_API_KEY=
+GRIDDB_CLUSTER_NAME=myCluster
+GRIDDB_USERNAME=admin
+GRIDDB_PASSWORD=admin
+IP_NOTIFICATION_MEMBER=griddb-server:10001
+```
+
+To get the `OPENAI_API_KEY` please read this [section](#openai-api-key).
+
+
+#### 2. Run with Docker Compose
+
+To run the app create a `docker-compose.yml` file with this configuration settings:
+
+```yaml
+networks:
+  griddb-net:
+    driver: bridge
+
+services:
+  griddb-server:
+    image: griddbnet/griddb:arm-5.5.0
+    container_name: griddb-server
+    environment:
+      - GRIDDB_CLUSTER_NAME=${GRIDDB_CLUSTER_NAME}
+      - GRIDDB_PASSWORD=${GRIDDB_PASSWORD}
+      - GRIDDB_USERNAME=${GRIDDB_USERNAME}
+      - NOTIFICATION_MEMBER=1
+      - IP_NOTIFICATION_MEMBER=${IP_NOTIFICATION_MEMBER}
+    networks:
+      - griddb-net
+    ports:
+      - "10001:10001"
+
+  clothes-rag:
+    image: junwatu/speech-dubbing:latest
+    container_name: speech-dubbing-griddb
+    env_file: .env 
+    networks:
+      - griddb-net
+    ports:
+      - "3000:3000"
+```
+
+
+### 3. Run
+
+When steps 1 and 2 are finished, run the app with this command:
+
+```shell
+docker-compose up -d
+```
+
+If everything running, you will get a similar response to this:
+
+```shell
+[+] Running 3/3
+ ✔ Network speech-dubbing-griddb_griddb-net  Created                     0.0s 
+ ✔ Container griddb-server               Started                     0.2s 
+ ✔ Container speech-dubbing-griddb          Started                     0.2s 
+```
+
+### 4. Test the App
+
+Open the browser and go to `http://localhost:3000`.
+
+
+[DRAFT ALLOW MIC PERMISSION]
+
 
 ### Environment Setup
 
