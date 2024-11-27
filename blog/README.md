@@ -1,4 +1,4 @@
-# Automated Speech Translation: Real-time Dubbing Powered by GPT-4o
+# Automated Speech Translation: Real-time Dubbing Powered by GPT-4o and Node.js
 
 ![blog cover](images/cover.jpg)
 
@@ -8,17 +8,15 @@ Real-time communication across languages is crucial in today’s interconnected 
 
 This blog provides a step-by-step guide to building an automated real-time dubbing system. Using GPT-4o Realtime and GPT-4o Audio for context-aware audio translations, Node.js for data handling, and GridDB for scalable storage, you’ll learn how to process speech, translate it, and deliver dubbed audio instantly. If you’re ready to break language barriers with cutting-edge tech, let’s get started.
 
-## Setting Up the Environment
+## Prerequisites
 
-### Prerequisites
+You should have an access to the GPT-4o Realtime and GPT-4o Audio models. Also, you should give a permission for the app to use the microphone in the browser.
 
-You should have an access to the gpt-4o-realtime and gpt-4o-audio models. Optionally, you shuold give a permission for the app to use the microphone in the browser.
+## How to Run the App
 
-### How to Run the App
+This app is tested on ARM Machines such as Apple MacBook M1 or M2 and to run the project you need the [Docker](https://www.docker.com/products/docker-desktop/) installed.
 
-This app is tested on ARM Machines such as Apple MacBook M1 or M2 and to run the project you need [Docker](https://www.docker.com/products/docker-desktop/) installed.
-
-#### 1.`.env` Setup
+### 1.`.env` Setup
 
 Create an empty directory, for example, `speech-dubbing`, and change to that directory:
 
@@ -39,10 +37,9 @@ IP_NOTIFICATION_MEMBER=griddb-server:10001
 
 To get the `OPENAI_API_KEY` please read this [section](#openai-api-key).
 
+### 2. Docker Compose Configuration
 
-#### 2. Run with Docker Compose
-
-To run the app create a `docker-compose.yml` file with this configuration settings:
+Before run the app create a `docker-compose.yml` file with this configuration settings:
 
 ```yaml
 networks:
@@ -74,7 +71,6 @@ services:
       - "3000:3000"
 ```
 
-
 ### 3. Run
 
 When steps 1 and 2 are finished, run the app with this command:
@@ -96,19 +92,43 @@ If everything running, you will get a similar response to this:
 
 Open the browser and go to `http://localhost:3000`.
 
-
 [DRAFT ALLOW MIC PERMISSION]
 
+## Environment Setup
 
-### Environment Setup
-
-#### **OpenAI API Key**
+### **OpenAI API Key**
 
 You can create a new OpenAI project or use the existing one and then create and get the OpenAI API key [here](https://platform.openai.com/api-keys). Later, you need to save this key in the `.env` file.
 
 By default, OpenAI will restrict the models from public access even if you have a valid key. You also need to enable these models in the OpenAI project settings:
 
 ![gpt-4o-audio-and-realtime](images/gpt-4o-realtime-audio-models.png)
+
+### Docker
+
+
+For easy development and distribution, this project uses a docker container to "package" the application. For easy Docker installation, use the [Docker Desktop](https://www.docker.com/products/docker-desktop/) tool.
+
+#### GridDB Docker
+
+This app needs a GridDB server and it should be running before the app. In this project, we will use the GridDB docker for ARM machines.  To test the GridDB on your local machine, you can run these docker commands:
+
+```shell
+docker network create griddb-net
+docker pull griddbnet/griddb:arm-5.5.0
+docker run --name griddb-server \
+    --network griddb-net \
+    -e GRIDDB_CLUSTER_NAME=myCluster \
+    -e GRIDDB_PASSWORD=admin \
+    -e NOTIFICATION_MEMBER=1 \
+    -d -t griddbnet/griddb:arm-5.5.0
+```
+
+By using the Docker Desktop, you can easily check if the GridDB docker is running.
+
+![griddb docker arm](images/griddb-docker-arm.png)
+
+For more about GridDB docker for ARM, please check out this [blog](https://griddb.net/en/blog/griddb-on-arm-with-docker/).
 
 ## Capturing Speech Input
 
