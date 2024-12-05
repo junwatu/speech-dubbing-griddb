@@ -1,5 +1,4 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import griddb from './db/griddb.js';
 import store from './db/griddbClient.js';
 import { getOrCreateContainer, insertData, queryData, queryDataById } from './db/griddbOperations.js';
@@ -7,7 +6,7 @@ import { getOrCreateContainer, insertData, queryData, queryDataById } from './db
 const app = express();
 const PORT = 3000;
 
-app.use(bodyParser.json());
+app.use(express.json());
 
 const containerName = 'myContainer';
 const columnInfoList = [

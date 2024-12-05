@@ -18,10 +18,8 @@ COPY ./lib/griddb-c-client-5.5.0-linux.aarch64.rpm /
 RUN rpm -Uvh /griddb-c-client-5.5.0-linux.aarch64.rpm
 
 SHELL ["/bin/bash", "--login", "-c"]
-# Copy entrypoint and files
-COPY run-griddb.sh package.json main.js server.js /root/
-COPY db /root/db/
 
+COPY . /root/
 WORKDIR /root
 
 # Install nodejs client
@@ -37,7 +35,8 @@ WORKDIR /root
 
 EXPOSE 3000
 # Set permission executable for script
-RUN chmod a+x run-griddb.sh
+RUN chmod a+x run.sh
 RUN npm install
+RUN npm run build
 # Run sample
-CMD ["/bin/bash", "run-griddb.sh"]
+CMD ["/bin/bash", "run.sh"]
