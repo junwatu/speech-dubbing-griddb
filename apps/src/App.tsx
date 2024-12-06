@@ -1,9 +1,13 @@
-import { Button } from "@/components/ui/button"
+import AudioRecorder from './AudioRecorder';
 
-export default function Home() {
+const Home = () => {
   return (
-    <div>
-      <Button>Click me</Button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="w-full max-w-md">
+        <AudioRecorder />
+      </div>
     </div>
-  )
-}
+  );
+};
+
+export default Home;

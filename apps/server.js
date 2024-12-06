@@ -1,24 +1,45 @@
 import express from 'express';
+import multer from 'multer';
+
+/**
 import griddb from './db/griddb.js';
 import store from './db/griddbClient.js';
 import { getOrCreateContainer, insertData, queryData, queryDataById } from './db/griddbOperations.js';
+*/
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use(express.static('uploads')); // Serve uploaded files statically if needed
+app.use(express.static('www'));
 
+/**
 const containerName = 'myContainer';
 const columnInfoList = [
 	['id', griddb.Type.INTEGER],
 	['name', griddb.Type.STRING],
 	['value', griddb.Type.DOUBLE],
 ];
+*/
+
+// Configure multer for file storage
+const storage = multer.diskStorage({
+	destination: (req, file, cb) => {
+		cb(null, 'uploads/'); // Specify the directory for audio files
+	},
+	filename: (req, file, cb) => {
+		cb(null, `${Date.now()}-${file.originalname}`); // Use timestamp for unique filenames
+	}
+});
+
+const upload = multer({ storage });
 
 app.get('/', async (req, res) => {
-	res.json({ app: "Your next awesome app" })
+	res.sendFile('index.html');
 })
 
+/**
 app.post('/insert', async (req, res) => {
 	const { id, name, value } = req.body;
 
@@ -63,6 +84,19 @@ app.get('/query/:id', async (req, res) => {
 		res.status(500).json({ error: 'Failed to query data by ID' });
 	}
 });
+
+*/
+
+app.post('/upload-audio', upload.single('audio'), (req, res) => {
+	if (!req.file) {
+		return res.status(400).json({ error: 'No file uploaded' });
+	}
+	res.status(201).json({
+		message: 'Audio uploaded successfully',
+		filePath: `/uploads/${req.file.filename}`
+	});
+});
+
 
 app.listen(PORT, () => {
 	console.log(`Server is running on http://localhost:${PORT}`);
