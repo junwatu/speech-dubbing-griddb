@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mic, StopCircle, Download } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AudioRecorder = () => {
 	const [isRecording, setIsRecording] = useState(false);
@@ -45,10 +45,11 @@ const AudioRecorder = () => {
 
 	const uploadAudio = async (audioBlob: Blob) => {
 		const formData = new FormData();
-		formData.append('audio', new File([audioBlob], `recording-${Date.now()}.wav`));
+		const fileName = `recorded-audio-${Date.now()}.wav`;
+		formData.append('audio', new File([audioBlob], fileName));
 
 		try {
-			const response = await fetch('http://localhost:3000/upload-audio', {
+			const response = await fetch('http://localhost:5555/upload-audio', {
 				method: 'POST',
 				body: formData,
 			});
@@ -73,8 +74,8 @@ const AudioRecorder = () => {
 	return (
 		<Card className="w-full">
 			<CardHeader className='text-center'>
-				<CardTitle>Speech Dubbing</CardTitle>
-				<CardDescription>Push to dubb your voice</CardDescription>
+				<CardTitle>Speech Dubber</CardTitle>
+				<CardDescription>Push to dub your voice</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				{isRecording && (
@@ -105,7 +106,7 @@ const AudioRecorder = () => {
 							className="w-full"
 						>
 							<Download className="mr-2 h-4 w-4" />
-							Download Recording
+							Download Voice Translation
 						</Button>
 					</div>
 				)}

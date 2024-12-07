@@ -1,5 +1,10 @@
-import express from 'express';
+import fs from 'fs';
+import path from 'path';
 import multer from 'multer';
+import express from 'express';
+import { processAudio } from './lib/openaiAudioProcessor.js';
+import { __dirname } from './dirname.js';
+import { writeFileSync } from "node:fs";
 
 /**
 import griddb from './db/griddb.js';
@@ -8,28 +13,29 @@ import { getOrCreateContainer, insertData, queryData, queryDataById } from './db
 */
 
 const app = express();
-const PORT = 3000;
+const PORT = 5555;
 
 app.use(express.json());
-app.use(express.static('uploads')); // Serve uploaded files statically if needed
+app.use(express.static('uploads'));
 app.use(express.static('www'));
 
 /**
 const containerName = 'myContainer';
 const columnInfoList = [
 	['id', griddb.Type.INTEGER],
-	['name', griddb.Type.STRING],
-	['value', griddb.Type.DOUBLE],
+	['original', griddb.Type.STRING],
+	['originalText', griddb.Type.STRING],
+	['translated', griddb.Type.STRING],
+    ['translatedText', griddb.Type.String]
 ];
 */
 
-// Configure multer for file storage
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, 'uploads/'); // Specify the directory for audio files
+		cb(null, 'uploads/'); 
 	},
 	filename: (req, file, cb) => {
-		cb(null, `${Date.now()}-${file.originalname}`); // Use timestamp for unique filenames
+		cb(null, `${Date.now()}-${file.originalname}`); 
 	}
 });
 
@@ -87,14 +93,39 @@ app.get('/query/:id', async (req, res) => {
 
 */
 
-app.post('/upload-audio', upload.single('audio'), (req, res) => {
+app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 	if (!req.file) {
 		return res.status(400).json({ error: 'No file uploaded' });
 	}
-	res.status(201).json({
-		message: 'Audio uploaded successfully',
-		filePath: `/uploads/${req.file.filename}`
-	});
+
+	const filePath = path.join(__dirname, req.file.path);
+
+	try {
+		// Read uploaded file and convert to base64
+		//debug fixed path
+		const audioBuffer = fs.readFileSync(path.join(__dirname, 'uploads', 'recorded-audio.wav'));
+		const base64str = Buffer.from(audioBuffer).toString('base64');
+
+		const language = "Japanese";
+
+		// Process audio using OpenAI
+		const result = await processAudio(base64str, language);
+
+		writeFileSync(
+			`translation-${language}.wav`,
+			Buffer.from(result.message.audio.data, 'base64'),
+			{ encoding: "utf-8" }
+		);
+
+		// Return OpenAI's response
+		res.status(200).json({ message: 'Audio processed successfully', result });
+	} catch (error) {
+		console.error('Error processing audio:', error.message);
+		res.status(500).json({ error: 'Failed to process audio' });
+	} finally {
+		// Clean up uploaded file
+		fs.unlinkSync(filePath);
+	}
 });
 
 
