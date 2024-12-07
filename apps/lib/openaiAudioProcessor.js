@@ -16,11 +16,11 @@ export async function processAudio(base64Str, language) {
 		const response = await openai.chat.completions.create({
 			model: "gpt-4o-audio-preview",
 			modalities: ["text", "audio"],
-			audio: { voice: "alloy", format: "wav" },
+			audio: { voice: "alloy", format: "mp3" },
 			messages: [
 				{
 					role: "system",
-					content: `The user will provide an audio file. Dub the complete audio, word for word in ${language}. Keep certain words in original language for which a direct translation in ${language} does not exist.`
+					content: `The user will provide an Indonesian audio. Dub the complete audio, word for word in ${language}. Keep certain words in original language for which a direct translation in ${language} does not exist.`
 				},
 				{
 					role: "user",
@@ -29,14 +29,14 @@ export async function processAudio(base64Str, language) {
 							type: "input_audio",
 							input_audio: {
 								data: base64Str,
-								format: "wav"
+								format: "mp3"
 							}
 						}
 					]
 				}
 			],
 		});
-
+		console.log(response.choices[0])
 		return response.choices[0];
 	} catch (error) {
 		throw new Error(`OpenAI audio processing failed: ${error.message}`);
