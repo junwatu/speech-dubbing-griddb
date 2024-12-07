@@ -4,7 +4,7 @@ import multer from 'multer';
 import express from 'express';
 import { processAudio } from './lib/openaiAudioProcessor.js';
 import { __dirname } from './dirname.js';
-import { writeFileSync } from "node:fs";
+import ffmpeg from 'fluent-ffmpeg';
 
 /**
 import griddb from './db/griddb.js';
@@ -93,6 +93,7 @@ app.get('/query/:id', async (req, res) => {
 
 */
 
+/**
 app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 	if (!req.file) {
 		return res.status(400).json({ error: 'No file uploaded' });
@@ -104,12 +105,15 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 		// Read uploaded file and convert to base64
 		//debug fixed path
 		const audioBuffer = fs.readFileSync(path.join(__dirname, 'uploads', 'recorded-audio.wav'));
+		console.log(audioBuffer);
+
 		const base64str = Buffer.from(audioBuffer).toString('base64');
+		console.log(base64str);
 
 		const language = "Japanese";
 
 		// Process audio using OpenAI
-		const result = await processAudio(base64str, language);
+		const result = await processAudio(debugAudioBase64, language);
 
 		writeFileSync(
 			`translation-${language}.wav`,
@@ -127,7 +131,86 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 		fs.unlinkSync(filePath);
 	}
 });
+*/
 
+app.post('/upload-audio', upload.single('audio'), async (req, res) => {
+	// Check if file was uploaded
+	if (!req.file) {
+		return res.status(400).json({ error: 'No file uploaded' });
+	}
+
+	const originalFilePath = req.file.path;
+	const fileExtension = path.extname(req.file.originalname).toLowerCase();
+	const fileNameWithoutExt = path.basename(req.file.originalname, fileExtension);
+	const mp3FilePath = path.join(
+		path.dirname(originalFilePath),
+		`${fileNameWithoutExt}.mp3`
+	);
+
+	try {
+		// Function to convert audio to MP3
+		const convertToMp3 = () => {
+			return new Promise((resolve, reject) => {
+				ffmpeg(originalFilePath)
+					.toFormat('mp3')
+					.on('error', (err) => {
+						console.error('Conversion error:', err);
+						reject(err);
+					})
+					.on('end', () => {
+						// Remove the original file after conversion
+						fs.unlinkSync(originalFilePath);
+						resolve(mp3FilePath);
+					})
+					.save(mp3FilePath);
+			});
+		};
+
+		// Convert to MP3 if not already in MP3 format
+		if (fileExtension !== '.mp3') {
+			await convertToMp3();
+		} else {
+			// If already MP3, just use the original file
+			fs.renameSync(originalFilePath, mp3FilePath);
+		}
+
+		// Read converted MP3 file
+		const audioBuffer = fs.readFileSync(mp3FilePath);
+		const base64str = Buffer.from(audioBuffer).toString('base64');
+
+		const language = "Japanese";
+
+		// Process audio using OpenAI
+		const result = await processAudio(base64str, language);
+
+		// Write translation 
+		fs.writeFileSync(
+			`translation-${language}.mp3`,
+			Buffer.from(result.message.audio.data, 'base64'),
+			{ encoding: "utf-8" }
+		);
+
+		// Return OpenAI's response
+		res.status(200).json({
+			message: 'Audio processed successfully',
+			originalFormat: fileExtension,
+			result
+		});
+
+	} catch (error) {
+		console.error('Error processing audio:', error.message);
+
+		// Cleanup any temporary files
+		if (fs.existsSync(mp3FilePath)) {
+			fs.unlinkSync(mp3FilePath);
+		}
+		if (fs.existsSync(originalFilePath)) {
+			fs.unlinkSync(originalFilePath);
+		}
+
+		res.status(500).json({ error: 'Failed to process audio' });
+	}
+});
 
 app.listen(PORT, () => {
 	console.log(`Server is running on http://localhost:${PORT}`);
