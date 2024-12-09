@@ -143,18 +143,17 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 
 		// Process audio using OpenAI
 		const result = await processAudio(base64str, language);
+		const filename = `translation-${language}.mp3`;
 
-		// Write translation 
 		fs.writeFileSync(
-			`translation-${language}.mp3`,
+			filename,
 			Buffer.from(result.message.audio.data, 'base64'),
 			{ encoding: "utf-8" }
 		);
-
-		// Return OpenAI's response
+,
 		res.status(200).json({
-			message: 'Audio processed successfully',
-			originalFormat: fileExtension,
+			language,
+			filename,
 			result
 		});
 

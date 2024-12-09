@@ -36,7 +36,7 @@ export async function processAudio(base64Str, language) {
 				}
 			],
 		});
-		console.log(response.choices[0])
+
 		return response.choices[0];
 	} catch (error) {
 		throw new Error(`OpenAI audio processing failed: ${error.message}`);
