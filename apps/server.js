@@ -2,15 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
 import express from 'express';
-import { processAudio } from './lib/openaiAudioProcessor.js';
-import { __dirname } from './dirname.js';
 import ffmpeg from 'fluent-ffmpeg';
 
-/**
+import { processAudio } from './lib/openaiAudioProcessor.js';
+import { __dirname } from './dirname.js';
+
 import griddb from './db/griddb.js';
 import store from './db/griddbClient.js';
 import { getOrCreateContainer, insertData, queryData, queryDataById } from './db/griddbOperations.js';
-*/
 
 const app = express();
 const PORT = process.env.VITE_PORT || 3000;
@@ -18,17 +17,18 @@ const PORT = process.env.VITE_PORT || 3000;
 app.use(express.json());
 app.use(express.static('uploads'));
 app.use(express.static('www'));
+app.use(express.static('translations'));
 
-/**
+
 const containerName = 'myContainer';
 const columnInfoList = [
 	['id', griddb.Type.INTEGER],
-	['original', griddb.Type.STRING],
-	['originalText', griddb.Type.STRING],
-	['translated', griddb.Type.STRING],
-    ['translatedText', griddb.Type.String]
+	['originalAudio', griddb.Type.STRING],
+	['originalTranscription', griddb.Type.STRING],
+	['targetAudio', griddb.Type.STRING],
+	['targetTranscription', griddb.Type.DOUBLE],
+	//['score, gridb.Type.DOUBLE]
 ];
-*/
 
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
@@ -44,54 +44,6 @@ const upload = multer({ storage });
 app.get('/', async (req, res) => {
 	res.sendFile('index.html');
 })
-
-/**
-app.post('/insert', async (req, res) => {
-	const { id, name, value } = req.body;
-
-	if (id == null || !name || value == null) {
-		return res.status(400).json({ error: 'Missing required fields: id, name, value' });
-	}
-
-	try {
-		const container = await getOrCreateContainer(containerName, columnInfoList);
-		await insertData(container, [id, name, value]);
-		res.status(201).json({ message: 'Data inserted successfully' });
-	} catch (err) {
-		console.error('Error in /insert:', err.message);
-		res.status(500).json({ error: 'Failed to insert data' });
-	}
-});
-
-app.get('/query', async (req, res) => {
-	try {
-		const container = await store.getContainer(containerName);
-		const result = await queryData(container);
-		res.status(200).json({ data: result });
-	} catch (err) {
-		console.error('Error in /query:', err.message);
-		res.status(500).json({ error: 'Failed to query data' });
-	}
-});
-
-app.get('/query/:id', async (req, res) => {
-	const { id } = req.params;
-
-	try {
-		const container = await store.getContainer(containerName);
-		const result = await queryDataById(id, container, store);
-		if (result.length > 0) {
-			res.status(200).json({ data: result });
-		} else {
-			res.status(404).json({ message: 'Data not found' });
-		}
-	} catch (err) {
-		console.error('Error in /query/:id:', err.message);
-		res.status(500).json({ error: 'Failed to query data by ID' });
-	}
-});
-
-*/
 
 
 app.post('/upload-audio', upload.single('audio'), async (req, res) => {
@@ -146,11 +98,21 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 		const filename = `translation-${language}.mp3`;
 
 		fs.writeFileSync(
-			filename,
+			path.join(__dirname, 'translations', filename),
 			Buffer.from(result.message.audio.data, 'base64'),
 			{ encoding: "utf-8" }
 		);
-,
+
+		//save data to GridDB database
+
+
+		try {
+			const container = await getOrCreateContainer(containerName, columnInfoList);
+			await insertData(container, [id, originalAudio, originalTranscription, targetAudio, targetTranscription]);
+		} catch (error) {
+			console.log(error)
+		}
+
 		res.status(200).json({
 			language,
 			filename,
@@ -171,6 +133,35 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 		res.status(500).json({ error: 'Failed to process audio' });
 	}
 });
+
+app.get('/query', async (req, res) => {
+	try {
+		const container = await store.getContainer(containerName);
+		const result = await queryData(container);
+		res.status(200).json({ data: result });
+	} catch (err) {
+		console.error('Error in /query:', err.message);
+		res.status(500).json({ error: 'Failed to query data' });
+	}
+});
+
+app.get('/query/:id', async (req, res) => {
+	const { id } = req.params;
+
+	try {
+		const container = await store.getContainer(containerName);
+		const result = await queryDataById(id, container, store);
+		if (result.length > 0) {
+			res.status(200).json({ data: result });
+		} else {
+			res.status(404).json({ message: 'Data not found' });
+		}
+	} catch (err) {
+		console.error('Error in /query/:id:', err.message);
+		res.status(500).json({ error: 'Failed to query data by ID' });
+	}
+});
+
 
 app.listen(PORT, () => {
 	console.log(`Server is running on http://localhost:${PORT}`);
