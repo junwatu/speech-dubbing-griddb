@@ -62,8 +62,8 @@ services:
       - "10001:10001"
 
   clothes-rag:
-    image: junwatu/speech-dubbing:latest
-    container_name: speech-dubbing-griddb
+    image: junwatu/speech-dubber:latest
+    container_name: speech-dubber-griddb
     env_file: .env 
     networks:
       - griddb-net
