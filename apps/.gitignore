@@ -25,3 +25,5 @@ dist-ssr
 
 *.mp3
 *.wav
+
+.env

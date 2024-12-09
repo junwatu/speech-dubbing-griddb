@@ -13,7 +13,7 @@ import { getOrCreateContainer, insertData, queryData, queryDataById } from './db
 */
 
 const app = express();
-const PORT = 5555;
+const PORT = process.env.VITE_PORT || 3000;
 
 app.use(express.json());
 app.use(express.static('uploads'));
@@ -93,45 +93,6 @@ app.get('/query/:id', async (req, res) => {
 
 */
 
-/**
-app.post('/upload-audio', upload.single('audio'), async (req, res) => {
-	if (!req.file) {
-		return res.status(400).json({ error: 'No file uploaded' });
-	}
-
-	const filePath = path.join(__dirname, req.file.path);
-
-	try {
-		// Read uploaded file and convert to base64
-		//debug fixed path
-		const audioBuffer = fs.readFileSync(path.join(__dirname, 'uploads', 'recorded-audio.wav'));
-		console.log(audioBuffer);
-
-		const base64str = Buffer.from(audioBuffer).toString('base64');
-		console.log(base64str);
-
-		const language = "Japanese";
-
-		// Process audio using OpenAI
-		const result = await processAudio(debugAudioBase64, language);
-
-		writeFileSync(
-			`translation-${language}.wav`,
-			Buffer.from(result.message.audio.data, 'base64'),
-			{ encoding: "utf-8" }
-		);
-
-		// Return OpenAI's response
-		res.status(200).json({ message: 'Audio processed successfully', result });
-	} catch (error) {
-		console.error('Error processing audio:', error.message);
-		res.status(500).json({ error: 'Failed to process audio' });
-	} finally {
-		// Clean up uploaded file
-		fs.unlinkSync(filePath);
-	}
-});
-*/
 
 app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 	// Check if file was uploaded

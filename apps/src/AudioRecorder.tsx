@@ -48,8 +48,11 @@ const AudioRecorder = () => {
 		const fileName = `recorded-audio-${Date.now()}.wav`;
 		formData.append('audio', new File([audioBlob], fileName));
 
+		const uploadUrl = `${import.meta.env.VITE_APP_BASE_URL}:${import.meta.env.VITE_PORT}/upload-audio`;
+		console.log(uploadUrl)
+
 		try {
-			const response = await fetch('http://localhost:5555/upload-audio', {
+			const response = await fetch(uploadUrl, {
 				method: 'POST',
 				body: formData,
 			});
