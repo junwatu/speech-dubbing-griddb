@@ -106,6 +106,7 @@ const AudioRecorder = () => {
 							controls
 							className="w-full"
 						/>
+						{/**
 						<Button
 							onClick={downloadRecording}
 							className="w-full"
@@ -113,6 +114,8 @@ const AudioRecorder = () => {
 							<Download className="mr-2 h-4 w-4" />
 							Download Voice Translation
 						</Button>
+						*/}
+
 					</div>
 				)}
 			</CardContent>
