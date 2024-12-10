@@ -3,6 +3,7 @@ import path from 'path';
 import multer from 'multer';
 import express from 'express';
 import ffmpeg from 'fluent-ffmpeg';
+import { generateRandomID } from './lib/rangen.js';
 
 import { processAudio } from './lib/openaiAudioProcessor.js';
 import { __dirname } from './dirname.js';
@@ -20,13 +21,13 @@ app.use(express.static('www'));
 app.use(express.static('translations'));
 
 
-const containerName = 'myContainer';
+const containerName = 'SpeechDubbingContainer';
 const columnInfoList = [
 	['id', griddb.Type.INTEGER],
 	['originalAudio', griddb.Type.STRING],
-	['originalTranscription', griddb.Type.STRING],
+	//['originalTranscription', griddb.Type.STRING],
 	['targetAudio', griddb.Type.STRING],
-	['targetTranscription', griddb.Type.DOUBLE],
+	['targetTranscription', griddb.Type.STRING],
 	//['score, gridb.Type.DOUBLE]
 ];
 
@@ -92,23 +93,28 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 		const base64str = Buffer.from(audioBuffer).toString('base64');
 
 		const language = "Japanese";
+		const translationsDir = path.join(__dirname, 'translations');
+
+		// Ensure translations directory exists
+		if (!fs.existsSync(translationsDir)) {
+			fs.mkdirSync(translationsDir, { recursive: true });
+		}
 
 		// Process audio using OpenAI
 		const result = await processAudio(base64str, language);
 		const filename = `translation-${language}.mp3`;
+		const targetAudio = path.join(translationsDir, filename);
 
 		fs.writeFileSync(
-			path.join(__dirname, 'translations', filename),
+			targetAudio,
 			Buffer.from(result.message.audio.data, 'base64'),
 			{ encoding: "utf-8" }
 		);
 
 		//save data to GridDB database
-
-
 		try {
 			const container = await getOrCreateContainer(containerName, columnInfoList);
-			await insertData(container, [id, originalAudio, originalTranscription, targetAudio, targetTranscription]);
+			await insertData(container, [generateRandomID(), mp3FilePath, targetAudio, result.message.audio.transcript]);
 		} catch (error) {
 			console.log(error)
 		}
