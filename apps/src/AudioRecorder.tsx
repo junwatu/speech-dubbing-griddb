@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, StopCircle, Download } from 'lucide-react';
+import { Mic, StopCircle } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AudioRecorder = () => {
@@ -34,6 +34,7 @@ const AudioRecorder = () => {
 					setAudioURL(audioUrl);
 					audioChunksRef.current = [];
 					uploadAudio(audioBlob);
+					console.log(audioURL);
 				};
 
 				mediaRecorderRef.current.start();
@@ -65,6 +66,8 @@ const AudioRecorder = () => {
 		}
 	};
 
+	/**
+
 	const downloadRecording = () => {
 		if (audioURL) {
 			const link = document.createElement('a');
@@ -75,6 +78,7 @@ const AudioRecorder = () => {
 			document.body.removeChild(link);
 		}
 	};
+	*/
 
 	return (
 		<Card className="w-full">
