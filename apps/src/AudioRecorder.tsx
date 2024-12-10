@@ -9,6 +9,7 @@ const AudioRecorder = () => {
 	const [audioURL, setAudioURL] = useState<string | null>(null);
 	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 	const audioChunksRef = useRef<Blob[]>([]);
+	const [translatedAudioURL, setTranslatedAudioURL] = useState<string | null>(null);
 
 	const toggleRecording = async () => {
 		if (isRecording) {
@@ -57,6 +58,7 @@ const AudioRecorder = () => {
 				body: formData,
 			});
 			const data = await response.json();
+			setTranslatedAudioURL(data?.filename);
 			console.log('Uploaded successfully:', data);
 		} catch (error) {
 			console.error('Upload failed:', error);
@@ -66,8 +68,8 @@ const AudioRecorder = () => {
 	const downloadRecording = () => {
 		if (audioURL) {
 			const link = document.createElement('a');
-			link.href = audioURL;
-			link.download = 'recorded-audio.wav';
+			link.href = translatedAudioURL || '';
+			link.download = translatedAudioURL || '';
 			document.body.appendChild(link);
 			link.click();
 			document.body.removeChild(link);
@@ -97,10 +99,10 @@ const AudioRecorder = () => {
 					</Button>
 				</div>
 
-				{audioURL && (
+				{translatedAudioURL && (
 					<div className="space-y-4">
 						<audio
-							src={audioURL}
+							src={translatedAudioURL}
 							controls
 							className="w-full"
 						/>
