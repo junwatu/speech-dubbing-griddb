@@ -11,14 +11,23 @@ RUN set -eux \
        tar xz wget curl python3 --allowerasing \
     && dnf clean all
     
-    
 # Compile and install FFmpeg dependencies
-# nasm
 RUN curl -LO https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/nasm-2.16.01.tar.gz \
     && tar -xzf nasm-2.16.01.tar.gz \
     && cd nasm-2.16.01 \
     && ./configure && make -j$(nproc) && make install \
     && cd .. && rm -rf nasm-2.16.01 nasm-2.16.01.tar.gz
+
+# Build and install libmp3lame from source
+RUN curl -LO https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz \
+    && tar -xzf lame-3.100.tar.gz \
+    && cd lame-3.100 \
+    && ./configure --enable-shared --enable-nasm && make -j$(nproc) && make install \
+    && cd .. && rm -rf lame-3.100 lame-3.100.tar.gz
+
+# Ensure libraries are found by FFmpeg
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/ffmpeg.conf \
+    && ldconfig
 
 # FFmpeg source build
 RUN git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg \
@@ -60,7 +69,6 @@ RUN npm install fluent-ffmpeg
 RUN chmod a+x run.sh
 
 EXPOSE 3000
-# Set permission executable for script
 RUN chmod a+x run.sh
 RUN npm install
 RUN npm run build
