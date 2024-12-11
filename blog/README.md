@@ -14,7 +14,7 @@ You should have access to the [GPT-4o Audio](https://platform.openai.com/docs/mo
 
 ## How to Run the App
 
-The source code for this project is available in this [repository](https://github.com/junwatu/speech-dubbing-griddb). You don't need to clone it to run the app, as the working application is already dockerized. To run the project you need the [Docker](https://www.docker.com/products/docker-desktop/) installed.
+The source code for this project is available in this [repository](https://github.com/junwatu/speech-dubbing-griddb). You don't need to clone it to run the app, as the working application is already dockerized. However, to run the project you need the [Docker](https://www.docker.com/products/docker-desktop/) installed.
 
 Please note, that this app is tested on ARM machines such as Apple MacBook M1 or M2. While it is optimized for ARM architecture, it possible run on non-ARM machines with minor modifications, such as using a different GridDB Docker image for x86 systems.
 
