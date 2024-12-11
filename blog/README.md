@@ -10,7 +10,7 @@ This blog provides a step-by-step guide to building an automated dubbing system.
 
 ## Prerequisites
 
-You should have access to the GPT-4o Audio models. Also, you should give the app permission to use the microphone in the browser.
+You should have access to the [GPT-4o Audio](https://platform.openai.com/docs/models#gpt-4o-realtime) models. Also, you should give the app permission to use the microphone in the browser.
 
 ## How to Run the App
 
