@@ -142,6 +142,9 @@ By using the Docker Desktop, you can easily check if the GridDB docker is runnin
 
 For more about GridDB docker for ARM, please check out this [blog](https://griddb.net/en/blog/griddb-on-arm-with-docker/).
 
+### Development
+
+If you are a curious developer or need further development, you can clone and examine the [project source code]((https://github.com/junwatu/speech-dubbing-griddb)). Primarily, you must have Node.js, FFmpeg, and GridDB installed on your system.
 
 ## System Architecture
 
@@ -333,7 +336,7 @@ export async function processAudio(base64Str, language) {
 }
 ```
 
-## Save Audio Data into the GridDB
+## Save Audio Data
 
 ### Data Schema
 
