@@ -6,7 +6,7 @@
 
 Easy communication across languages is crucial in today’s interconnected world. Traditional translation and dubbing methods often fall short—they’re too slow, prone to errors, and struggle to scale effectively. For instance, human-based translation can introduce subjective inaccuracies, while manual dubbing processes frequently fail to keep pace with real-time demands or large-scale projects. However, advancements in AI have revolutionized audio translation, making it faster and more accurate.
 
-This blog provides a step-by-step guide to building an automated dubbing system. Using GPT-4o Audio for context-aware audio translations, Node.js for data handling, and GridDB for scalable storage, you’ll learn how to process speech, translate it, and deliver dubbed audio instantly. This guide will show you how to automate speech dubbing, ensuring seamless language communication.
+This blog provides a step-by-step guide to building an automated dubbing system. Using GPT-4o Audio for context-aware audio translations, Node.js for data handling, and GridDB for scalable storage, you’ll learn how to process speech, translate it, and deliver dubbed audio instantly. This guide will explain how to automate speech dubbing, ensuring seamless communication across languages, and the term "speech" is used interchangeably with "audio."
 
 ## Prerequisites
 
@@ -14,9 +14,9 @@ You should have access to the [GPT-4o Audio](https://platform.openai.com/docs/mo
 
 ## How to Run the App
 
-This app is tested on ARM machines such as Apple MacBook M1 or M2. While it is optimized for ARM architecture, it can also run on non-ARM machines with minor modifications, such as using a different GridDB Docker image for x86 systems.
+The source code for this project is available in this [repository](https://github.com/junwatu/speech-dubbing-griddb). You don't need to clone it to run the app, as the working application is already dockerized. To run the project you need the [Docker](https://www.docker.com/products/docker-desktop/) installed.
 
-To run the project you need the [Docker](https://www.docker.com/products/docker-desktop/) installed.
+Please note, that this app is tested on ARM machines such as Apple MacBook M1 or M2. While it is optimized for ARM architecture, it possible run on non-ARM machines with minor modifications, such as using a different GridDB Docker image for x86 systems.
 
 ### 1.`.env` Setup
 
