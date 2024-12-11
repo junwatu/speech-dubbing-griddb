@@ -20,7 +20,7 @@ export async function processAudio(base64Str, language) {
 			messages: [
 				{
 					role: "system",
-					content: `The user will provide an Indonesian audio. Dub the complete audio, word for word in ${language}. Keep certain words in original language for which a direct translation in ${language} does not exist.`
+					content: `The user will provide an English audio. Dub the complete audio, word for word in ${language}. Keep certain words in original language for which a direct translation in ${language} does not exist.`
 				},
 				{
 					role: "user",
