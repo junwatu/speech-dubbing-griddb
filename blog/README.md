@@ -92,18 +92,20 @@ If everything running, you will get a similar response to this:
  ✔ Container griddb-server         Started                                                0.2s
 ```
 
-### 4. Test the App
+### 4. Test the Speech Dubber App
 
-Open the browser and go to `http://localhost:3000`.
+These are the steps to use the app:
 
-![app demo](images/speech-dubber-demo.gif)
+ 1. **Open the App**: Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
+ 2. **Start Recording**: Click the record button.
+ 3. **Allow Microphone Access**: When prompted by the browser, click “Allow this time.”
+ 4. **Speak**: Record your message in English.
+ 5. **Stop Recording**: Click the stop button when done. Wait while the app processes and translates your audio.
+ 6. **Play the Translation**: Use the playback controls to listen to the translated Japanese audio.
 
+The demo below summarizes all the steps:
 
-To record audio, press the record button. Your browser will prompt you for permission to use the microphone; simply click "**Allow this time**" and start speaking.
-
-This app is designed for English language input. When you're finished, click the stop button to end the recording, and please wait a moment for the audio translation.
-
-Once the translation is successful, you'll see an audio playback UI beneath the recording button. This will be the translated audio, which is set to Japanese.
+ ![demo](images/speech-dubber-demo.gif)
 
 ## Environment Setup
 
@@ -197,8 +199,6 @@ Here’s a summary of the endpoints or API available in this server:
 | `POST`     | `/upload-audio`    | Accepts an audio file upload, converts it to MP3, processes it using OpenAI, and saves data to GridDB. |
 | `GET`      | `/query`           | Retrieves all records from the GridDB database.                                |
 | `GET`      | `/query/:id`       | Retrieves a specific record by ID from the GridDB database.                    |
-
-
 
 ## Audio Conversion
 
