@@ -6,11 +6,11 @@
 
 Easy communication across languages is crucial in today’s interconnected world. Traditional translation and dubbing methods often fall short—they’re too slow, prone to errors, and struggle to scale effectively. For instance, human-based translation can introduce subjective inaccuracies, while manual dubbing processes frequently fail to keep pace with real-time demands or large-scale projects. However, advancements in AI have revolutionized audio translation, making it faster and more accurate.
 
-This blog provides a step-by-step guide to building an automated dubbing system. Using GPT-4o Audio for context-aware audio translations, Node.js for data handling, and GridDB for scalable storage, you’ll learn how to process speech, translate it, and deliver dubbed audio instantly. This guide will show you how to automate speech dubbing, ensuring seamless communication across languages.
+This blog provides a step-by-step guide to building an automated dubbing system. Using GPT-4o Audio for context-aware audio translations, Node.js for data handling, and GridDB for scalable storage, you’ll learn how to process speech, translate it, and deliver dubbed audio instantly. This guide will show you how to automate speech dubbing, ensuring seamless language communication.
 
 ## Prerequisites
 
-You should have an access to the GPT-4o Realtime and GPT-4o Audio models. Also, you should give a permission for the app to use the microphone in the browser.
+You should have access to the GPT-4o Audio models. Also, you should give the app permission to use the microphone in the browser.
 
 ## How to Run the App
 
@@ -66,7 +66,7 @@ services:
       - "10001:10001"
 
   clothes-rag:
-    image: junwatu/speech-dubber:1.1
+    image: junwatu/speech-dubber:1.2
     container_name: speech-dubber-griddb
     env_file: .env 
     networks:
@@ -120,11 +120,11 @@ This app needs a GridDB server and it should be running before the app. In this 
 docker network create griddb-net
 docker pull griddbnet/griddb:arm-5.5.0
 docker run --name griddb-server \
-    --network griddb-net \
+ --network griddb-net \
     -e GRIDDB_CLUSTER_NAME=myCluster \
-    -e GRIDDB_PASSWORD=admin \
+ -e GRIDDB_PASSWORD=admin \
     -e NOTIFICATION_MEMBER=1 \
-    -d -t griddbnet/griddb:arm-5.5.0
+ -d -t griddbnet/griddb:arm-5.5.0
 ```
 
 By using the Docker Desktop, you can easily check if the GridDB docker is running.
@@ -144,7 +144,7 @@ const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
 ```
 
-The code above will prompts the user for permission to access the microphone.
+The code above will prompt the user for permission to access the microphone.
 
 ### Recording Audio
 
@@ -154,7 +154,7 @@ Once microphone access is granted, the `MediaRecorder` API is used to handle the
 mediaRecorderRef.current = new MediaRecorder(stream);
 ```
 
-As the recording progresses, audio chunks are collected through the ondataavailable event:
+As the recording progresses, audio chunks are collected through the `ondataavailable` event:
 
 ```js
 mediaRecorderRef.current.ondataavailable = (event: BlobEvent) => {
@@ -191,12 +191,45 @@ Here’s a summary of the endpoints available in this server:
 | `GET`      | `/query`           | Retrieves all records from the GridDB database.                                |
 | `GET`      | `/query/:id`       | Retrieves a specific record by ID from the GridDB database.                    |
 
+## Audio Conversion
+
+The default recording file format sent by the client is [WAV](https://en.wikipedia.org/wiki/WAV). However, in the Node.js server, this file is converted into the MP3 format for better processing.
+
+The audio conversion is done by [fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg) npm package:
+
+```js
+const convertToMp3 = () => {
+   return new Promise((resolve, reject) => {
+    ffmpeg(originalFilePath)
+     .toFormat('mp3')
+     .on('error', (err) => {
+      console.error('Conversion error:', err);
+      reject(err);
+     })
+     .on('end', () => {
+      fs.unlinkSync(originalFilePath);
+      resolve(mp3FilePath);
+     })
+     .save(mp3FilePath);
+   });
+  };
+```
+
+If you want to develop this project for further enhancements, you need to install [ffmpeg](https://www.ffmpeg.org/) in your system.
+
 ## Speech Dubbing
 
-The `gpt-4o-audio-preview` model from OpenAI will translate the recorded audio content into another language. Note that this model requires audio in base64-encoded format.
+### Target Language
+
+The `gpt-4o-audio-preview` model from OpenAI will translate the recorded audio content into another language.
 
 ```js
 const audioBuffer = fs.readFileSync(mp3FilePath);
+```
+
+Note that this model requires audio in base64-encoded format, so you have to encode the audio content into the base 64:
+
+```js
 const base64str = Buffer.from(audioBuffer).toString('base64');
 ```
 
@@ -235,27 +268,73 @@ The response `result` of the `processAudio` function is in JSON format that cont
 
 This JSON data is sent to the client, and with React, we can use it to render components, such as the HTML5 audio element, to play the translated audio.
 
+## GPT-4o Audio
+
+The [gpt-4o-audio](https://platform.openai.com/docs/models#gpt-4o-realtime) model is capable of [generating audio](https://platform.openai.com/docs/guides/audio) and text response based on the audio input. The model response is controlled by the system and user prompts. However, this project only uses the system prompt:
+
+```js
+{
+  role: "system",
+  content: `The user will provide an English audio. Dub the complete audio, word for word in ${language}. Keep certain words in original language for which a direct translation in ${language} does not exist.`
+},
+```
+
+The response type, text or audio is set by the `modalities` parameter, and the audio voice is set by the `audio` parameter:
+
+```js
+export async function processAudio(base64Str, language) {
+ try {
+  const response = await openai.chat.completions.create({
+ model: "gpt-4o-audio-preview",
+ modalities: ["text", "audio"],
+ audio: { voice: "alloy", format: "mp3" },
+ messages: [
+    {
+ role: "system",
+ content: `The user will provide an English audio. Dub the complete audio, word for word in ${language}. Keep certain words in original language for which a direct translation in ${language} does not exist.`
+    },
+    {
+ role: "user",
+ content: [
+      {
+ type: "input_audio",
+ input_audio: {
+ data: base64Str,
+ format: "mp3"
+       }
+      }
+ ]
+    }
+ ],
+  });
+
+  return response.choices[0];
+ } catch (error) {
+  throw new Error(`OpenAI audio processing failed: ${error.message}`);
+ }
+}
+```
+
 ## Save Audio Data into the GridDB
 
 ### Data Schema
 
-To save the audio data in the GridDB database, first we should defined the schema columns. The schema includes fields like `id` , `originalAudio` , `targetAudio` , and `targetTranscription`.
+To save audio data in the GridDB database, we must define the schema columns. The schema includes fields such as `id`, `originalAudio`, `targetAudio`, and `targetTranscription`.
 
-The container name can be arbitrary; however, it is best practice to choose one that reflects the context. For this project, the container name is `SpeechDubbingContainer` :
+The container name can be arbitrary; however, it is best practice to choose one that reflects the context. For this project, the container name is `SpeechDubbingContainer` :
 
 ```js
 const containerName = 'SpeechDubbingContainer';
 const columnInfoList = [
-  ['id', griddb.Type.INTEGER],
-  ['originalAudio', griddb.Type.STRING],
-  ['targetAudio', griddb.Type.STRING],
-  ['targetTranscription', griddb.Type.STRING],
+ ['id', griddb.Type.INTEGER],
+ ['originalAudio', griddb.Type.STRING],
+ ['targetAudio', griddb.Type.STRING],
+ ['targetTranscription', griddb.Type.STRING],
 ];
 const container = await getOrCreateContainer(containerName, columnInfoList);
 ```
 
 This table explaining the schema defined in the selected portion of your code:
-
 
 | **Column Name**         | **Type**               | **Description**                                                                                   |
 |--------------------------|------------------------|---------------------------------------------------------------------------------------------------|
@@ -266,7 +345,7 @@ This table explaining the schema defined in the selected portion of your code:
 
 ### Save Operation
 
-If the audio translation succesful, the `insertData` function will save the audio data into the database.
+If the audio translation succesful, the `insertData` function will save the audio data into the database.
 
 ```js
 try {
@@ -279,5 +358,55 @@ try {
 
 The GridDB data operation code is located in the `griddbOperations.js` file. This file provides detailed implementation on inserting data, querying data, and retrieving data by its ID in the GridDB database.
 
-## Testing and Improvement
+## User Interface
 
+The user interface in this project is build using React. The `AudioRecorder.tsx` is a React component for a speech dubbing interface featuring a header with a title and description, a recording alert, a toggleable recording button, and an audio player for playback if a translated audio URL is available:
+
+```jsx
+<Card className="w-full">
+   <CardHeader className='text-center'>
+    <CardTitle>Speech Dubber</CardTitle>
+    <CardDescription>Push to dub your voice</CardDescription>
+   </CardHeader>
+   <CardContent className="space-y-4">
+    {isRecording && (
+     <Alert variant="destructive">
+      <AlertDescription>Recording in progress...</AlertDescription>
+     </Alert>
+ )}
+
+    <div className="flex justify-center">
+     <Button
+      onClick={toggleRecording}
+      variant={isRecording ? "destructive" : "default"}
+      className="w-24 h-24 rounded-full"
+     >
+      {isRecording ? <StopCircle size={36} /> : <Mic size={36} />}
+     </Button>
+    </div>
+
+    {translatedAudioURL && (
+     <div className="space-y-4">
+      <audio
+       src={translatedAudioURL}
+       controls
+       className="w-full"
+      />
+     </div>
+ )}
+   </CardContent>
+  </Card>
+```
+
+This is the screenshot when the translated audio is available:
+
+![user interface](images/audio-response.jpeg)
+
+## Further Improvements
+
+This blog teaches you how to build a simple web application that translates audio from one language to another. However, please note that this is just a prototype. There are several improvements that you can make. Here are some suggestions:
+
+- Enhance the user interface.
+- Add a real-time feature.
+- Include a language selector.
+- Implement user management.
