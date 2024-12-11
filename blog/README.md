@@ -33,6 +33,8 @@ GRIDDB_CLUSTER_NAME=myCluster
 GRIDDB_USERNAME=admin
 GRIDDB_PASSWORD=admin
 IP_NOTIFICATION_MEMBER=griddb-server:10001
+VITE_APP_BASE_URL=http://localhost
+VITE_PORT=3000
 ```
 
 To get the `OPENAI_API_KEY` please read this [section](#openai-api-key).
@@ -62,7 +64,7 @@ services:
       - "10001:10001"
 
   clothes-rag:
-    image: junwatu/speech-dubber:latest
+    image: junwatu/speech-dubber:1.1
     container_name: speech-dubber-griddb
     env_file: .env 
     networks:
@@ -83,16 +85,16 @@ If everything running, you will get a similar response to this:
 
 ```shell
 [+] Running 3/3
- ✔ Network speech-dubbing-griddb_griddb-net  Created                     0.0s 
- ✔ Container griddb-server               Started                     0.2s 
- ✔ Container speech-dubbing-griddb          Started                     0.2s 
+ ✔ Network tmp_griddb-net          Created                                                0.0s 
+ ✔ Container speech-dubber-griddb  Started                                                0.2s 
+ ✔ Container griddb-server         Started                                                0.2s
 ```
 
 ### 4. Test the App
 
 Open the browser and go to `http://localhost:3000`.
 
-[DRAFT ALLOW MIC PERMISSION]
+![app demo](images/speech-dubber-demo.gif)
 
 ## Environment Setup
 
@@ -105,7 +107,6 @@ By default, OpenAI will restrict the models from public access even if you have 
 ![gpt-4o-audio-and-realtime](images/gpt-4o-realtime-audio-models.png)
 
 ### Docker
-
 
 For easy development and distribution, this project uses a docker container to "package" the application. For easy Docker installation, use the [Docker Desktop](https://www.docker.com/products/docker-desktop/) tool.
 
@@ -132,14 +133,80 @@ For more about GridDB docker for ARM, please check out this [blog](https://gridd
 
 ## Capturing Speech Input
 
-The speech input is from a microphone that accesible using the app via the browser.
+### Accessing the Microphone
 
-## Transcribe Speech to Text
+To record audio, the first step is to access the user’s microphone. This is achieved using the `navigator.mediaDevices.getUserMedia` API.
+
+```js
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+```
+
+The code above will prompts the user for permission to access the microphone.
+
+### Recording Audio
+
+Once microphone access is granted, the `MediaRecorder` API is used to handle the actual recording process. The audio stream is passed to `MediaRecorder` to create a recorder instance:
+
+```js
+mediaRecorderRef.current = new MediaRecorder(stream);
+```
+
+As the recording progresses, audio chunks are collected through the ondataavailable event:
+
+```js
+mediaRecorderRef.current.ondataavailable = (event: BlobEvent) => {
+    audioChunksRef.current.push(event.data);
+};
+```
+
+When the recording stops (`onstop` event), the chunks are combined into a single audio file (a `Blob`) and made available for upload:
+
+```js
+mediaRecorderRef.current.onstop = () => {
+    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    setAudioURL(audioUrl);
+    audioChunksRef.current = [];
+    uploadAudio(audioBlob);
+};
+```
+
+The `uploadAudio` function will upload the audio blob into the Node.js server.
+
+## Node.js Server
+
+This Node.js server processes audio files by converting them to MP3, translating the audio content using OpenAI, and storing the data in a GridDB database. It provides endpoints for uploading audio files, querying data from the database, and serving static files.
+
+### Routes Table
+
+Here’s a summary of the endpoints available in this server:
+
+| **Method** | **Endpoint**       | **Description**                                                                 |
+|------------|--------------------|---------------------------------------------------------------------------------|
+| `GET`      | `/`                | Serves the main HTML file (`index.html`).                                       |
+| `POST`     | `/upload-audio`    | Accepts an audio file upload, converts it to MP3, processes it using OpenAI, and saves data to GridDB. |
+| `GET`      | `/query`           | Retrieves all records from the GridDB database.                                |
+| `GET`      | `/query/:id`       | Retrieves a specific record by ID from the GridDB database.                    |
 
 ## Speech Dubbing
 
-## Transcribe Benchmarking
+The `gpt-4o-audio-preview` model from OpenAI will translate the recorded audio content into another language. Note that this model requires audio in base64-encoded format.
 
-## Quality Improvement
+```js
+const audioBuffer = fs.readFileSync(mp3FilePath);
+const base64str = Buffer.from(audioBuffer).toString('base64');
+```
+
+The default language for the audio translation is "Japanese". However, you can change it in the source code or add UI for language selector for further enhancement.
+
+```js
+const language = "Japanese";
+
+// Process audio using OpenAI
+const result = await processAudio(base64str, language);
+```
+
+## Save Audio Data into the GridDB
 
 ## Testing and Improvement
