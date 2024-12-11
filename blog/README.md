@@ -98,6 +98,13 @@ Open the browser and go to `http://localhost:3000`.
 
 ![app demo](images/speech-dubber-demo.gif)
 
+
+To record audio, press the record button. Your browser will prompt you for permission to use the microphone; simply click "**Allow this time**" and start speaking.
+
+This app is designed for English language input. When you're finished, click the stop button to end the recording, and please wait a moment for the audio translation.
+
+Once the translation is successful, you'll see an audio playback UI beneath the recording button. This will be the translated audio, which is set to Japanese.
+
 ## Environment Setup
 
 ### **OpenAI API Key**
