@@ -182,7 +182,7 @@ This Node.js server processes audio files by converting them to MP3, translating
 
 ### Routes Table
 
-Here’s a summary of the endpoints available in this server:
+Here’s a summary of the endpoints or API available in this server:
 
 | **Method** | **Endpoint**       | **Description**                                                                 |
 |------------|--------------------|---------------------------------------------------------------------------------|
@@ -190,6 +190,8 @@ Here’s a summary of the endpoints available in this server:
 | `POST`     | `/upload-audio`    | Accepts an audio file upload, converts it to MP3, processes it using OpenAI, and saves data to GridDB. |
 | `GET`      | `/query`           | Retrieves all records from the GridDB database.                                |
 | `GET`      | `/query/:id`       | Retrieves a specific record by ID from the GridDB database.                    |
+
+
 
 ## Audio Conversion
 
@@ -357,6 +359,16 @@ try {
 ```
 
 The GridDB data operation code is located in the `griddbOperations.js` file. This file provides detailed implementation on inserting data, querying data, and retrieving data by its ID in the GridDB database.
+
+### Read Operation
+
+To read all data or data for a specific ID, you can use code or tools like Postman. For example, to query all data in the GridDB database by using the `/query` endpoint:
+
+![query using postman](images/query-postman.png)
+
+And to read a specific data by ID, you can use the `/query/:id` endpoint:
+
+![query by id](images/query-by-id-postman.png)
 
 ## User Interface
 
