@@ -1,12 +1,12 @@
-# Automated Speech Translation: Real-time Dubbing Powered by GPT-4o and Node.js
+# Automated Speech Dubbing Using GPT-4o Audio and Node.js
 
 ![blog cover](images/cover.jpg)
 
 ## What This Blog is About
 
-Real-time communication across languages is crucial in today’s interconnected world. Traditional translation and dubbing methods often fall short—they’re too slow, prone to errors, and struggle to scale effectively. However, advancements in AI have revolutionized audio translation, making it faster, more accurate, and seamlessly real-time.
+Easy communication across languages is crucial in today’s interconnected world. Traditional translation and dubbing methods often fall short—they’re too slow, prone to errors, and struggle to scale effectively. For instance, human-based translation can introduce subjective inaccuracies, while manual dubbing processes frequently fail to keep pace with real-time demands or large-scale projects. However, advancements in AI have revolutionized audio translation, making it faster and more accurate.
 
-This blog provides a step-by-step guide to building an automated real-time dubbing system. Using GPT-4o Realtime and GPT-4o Audio for context-aware audio translations, Node.js for data handling, and GridDB for scalable storage, you’ll learn how to process speech, translate it, and deliver dubbed audio instantly. If you’re ready to break language barriers with cutting-edge tech, let’s get started.
+This blog provides a step-by-step guide to building an automated dubbing system. Using GPT-4o Audio for context-aware audio translations, Node.js for data handling, and GridDB for scalable storage, you’ll learn how to process speech, translate it, and deliver dubbed audio instantly. This guide will show you how to automate speech dubbing, ensuring seamless communication across languages.
 
 ## Prerequisites
 
@@ -14,7 +14,9 @@ You should have an access to the GPT-4o Realtime and GPT-4o Audio models. Also, 
 
 ## How to Run the App
 
-This app is tested on ARM Machines such as Apple MacBook M1 or M2 and to run the project you need the [Docker](https://www.docker.com/products/docker-desktop/) installed.
+This app is tested on ARM machines such as Apple MacBook M1 or M2. While it is optimized for ARM architecture, it can also run on non-ARM machines with minor modifications, such as using a different GridDB Docker image for x86 systems.
+
+To run the project you need the [Docker](https://www.docker.com/products/docker-desktop/) installed.
 
 ### 1.`.env` Setup
 
@@ -235,6 +237,47 @@ This JSON data is sent to the client, and with React, we can use it to render co
 
 ## Save Audio Data into the GridDB
 
+### Data Schema
 
+To save the audio data in the GridDB database, first we should defined the schema columns. The schema includes fields like `id` , `originalAudio` , `targetAudio` , and `targetTranscription`.
+
+The container name can be arbitrary; however, it is best practice to choose one that reflects the context. For this project, the container name is `SpeechDubbingContainer` :
+
+```js
+const containerName = 'SpeechDubbingContainer';
+const columnInfoList = [
+  ['id', griddb.Type.INTEGER],
+  ['originalAudio', griddb.Type.STRING],
+  ['targetAudio', griddb.Type.STRING],
+  ['targetTranscription', griddb.Type.STRING],
+];
+const container = await getOrCreateContainer(containerName, columnInfoList);
+```
+
+This table explaining the schema defined in the selected portion of your code:
+
+
+| **Column Name**         | **Type**               | **Description**                                                                                   |
+|--------------------------|------------------------|---------------------------------------------------------------------------------------------------|
+| `id`                    | `griddb.Type.INTEGER` | A unique identifier for each entry in the container.                                             |
+| `originalAudio`         | `griddb.Type.STRING`  | The file path or name of the original audio file that was uploaded and processed.                |
+| `targetAudio`           | `griddb.Type.STRING`  | The file path or name of the generated audio file containing the translated or dubbed speech.    |
+| `targetTranscription`   | `griddb.Type.STRING`  | The text transcription of the translated audio, as provided by the speech processing API.        |
+
+### Save Operation
+
+If the audio translation succesful, the `insertData` function will save the audio data into the database.
+
+```js
+try {
+  const container = await getOrCreateContainer(containerName, columnInfoList);
+  await insertData(container, [generateRandomID(), mp3FilePath, targetAudio, result.message.audio.transcript]);
+} catch (error) {
+  console.log(error)
+}
+```
+
+The GridDB data operation code is located in the `griddbOperations.js` file. This file provides detailed implementation on inserting data, querying data, and retrieving data by its ID in the GridDB database.
 
 ## Testing and Improvement
+
