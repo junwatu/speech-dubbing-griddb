@@ -142,6 +142,15 @@ By using the Docker Desktop, you can easily check if the GridDB docker is runnin
 
 For more about GridDB docker for ARM, please check out this [blog](https://griddb.net/en/blog/griddb-on-arm-with-docker/).
 
+
+## System Architecture
+
+![system-arch](images/system-arch.png)
+
+The flow of the speech dubbing process is pretty simple: The process begins with the user speaking into the browser, which captures the audio. This recorded audio is then sent to the Node.js server, where it undergoes processing. The server calls the GPT-4o Audio model to translate the audio content into another language. Once the audio is translated, the server saves the original and translated audio, along with relevant metadata, to the GridDB database for storage.
+
+Finally, the translated audio is sent back to the browser, where the user can play it through an HTML5 audio player.
+
 ## Capturing Speech Input
 
 ### Accessing the Microphone
