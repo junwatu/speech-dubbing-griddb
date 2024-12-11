@@ -207,6 +207,34 @@ const language = "Japanese";
 const result = await processAudio(base64str, language);
 ```
 
+The response `result` of the `processAudio` function is in JSON format that contains this data:
+
+```json
+{
+    "language": "Japanese",
+    "filename": "translation-Japanese.mp3",
+    "result": {
+        "index": 0,
+        "message": {
+            "role": "assistant",
+            "content": null,
+            "refusal": null,
+            "audio": {
+                "id": "audio_6758f02de0b48190ba109885b931122c",
+                "data": "base64-encoded_audio",
+                "expires_at": 1733885501,
+                "transcript": "こんにちは。今朝はとても晴天です。"
+            }
+        },
+        "finish_reason": "stop"
+    }
+}
+```
+
+This JSON data is sent to the client, and with React, we can use it to render components, such as the HTML5 audio element, to play the translated audio.
+
 ## Save Audio Data into the GridDB
+
+
 
 ## Testing and Improvement
