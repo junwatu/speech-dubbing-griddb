@@ -119,11 +119,13 @@ app.post('/upload-audio', upload.single('audio'), async (req, res) => {
 			console.log(error)
 		}
 
-		res.status(200).json({
+		const dataResponse = {
 			language,
 			filename,
 			result
-		});
+		}
+
+		res.status(200).json(dataResponse);
 
 	} catch (error) {
 		console.error('Error processing audio:', error.message);
